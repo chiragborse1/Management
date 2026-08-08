@@ -345,5 +345,13 @@ const subscriptionSchema = new Schema<ISubscription>(
 subscriptionSchema.index({ studentId: 1, status: 1 });
 subscriptionSchema.index({ messId: 1, status: 1 });
 subscriptionSchema.index({ endDate: 1, status: 1 });
+// DB-level guard for the duplicate-subscription race: the controller's
+// find-then-create check is TOCTOU-prone, so enforce one pending/active
+// subscription per (student, mess) at the storage layer too. Cancelled and
+// rejected rows are excluded so a student can re-apply later.
+subscriptionSchema.index(
+  { studentId: 1, messId: 1 },
+  { unique: true, partialFilterExpression: { status: { $in: ['pending', 'active'] } } }
+);
 
 export const Subscription = mongoose.model<ISubscription>('Subscription', subscriptionSchema);

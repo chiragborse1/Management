@@ -1,5 +1,5 @@
-import { defineConfig } from 'vitest/config'
-import { fileURLToPath, URL } from 'node:url'
+import { defineConfig } from 'vitest/config';
+import { fileURLToPath, URL } from 'node:url';
 
 export default defineConfig({
   resolve: {
@@ -13,8 +13,10 @@ export default defineConfig({
     include: ['src/**/*.test.ts'],
     testTimeout: 30_000,
     hookTimeout: 60_000,
-    // Integration tests boot an in-memory MongoDB — run serially
+    // Each integration suite boots its own in-memory MongoDB. Fork per file so
+    // Mongoose's global model registry is never re-evaluated across suites
+    // (OverwriteModelError otherwise).
     pool: 'forks',
-    poolOptions: { forks: { singleFork: true } },
+    poolOptions: { forks: { singleFork: false } },
   },
-})
+});
