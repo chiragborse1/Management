@@ -25,10 +25,11 @@ export default function StatCard({
       <CardContent className="flex items-start justify-between gap-4 p-5">
         <div className="min-w-0">
           <p className="text-muted-foreground text-sm font-medium">{label}</p>
-          <p className="text-foreground mt-1 truncate text-2xl font-semibold tracking-tight">
+          {/* value/sub are ReactNodes (may be Skeleton/rich content) — use div, not p */}
+          <div className="text-foreground mt-1 truncate text-2xl font-semibold tracking-tight">
             {value}
-          </p>
-          {sub && <p className="text-muted-foreground mt-1 text-sm">{sub}</p>}
+          </div>
+          {sub && <div className="text-muted-foreground mt-1 text-sm">{sub}</div>}
         </div>
         {Icon && (
           <div
