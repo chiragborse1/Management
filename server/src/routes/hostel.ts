@@ -29,7 +29,7 @@ router.delete('/:id', authorize('admin'), asyncHandler(hostelController.deleteHo
 router.get(
   '/',
   authorize('admin', 'student'),
-  validate(paginationSchema),
+  validate(paginationSchema, 'query'),
   asyncHandler(hostelController.getHostels)
 );
 router.get('/:id', authorize('admin', 'student'), asyncHandler(hostelController.getHostelById));
