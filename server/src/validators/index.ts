@@ -273,6 +273,9 @@ export const updatePaymentSchema = z.object({
   receiptUrl: z.string().url().optional(),
 });
 
+/** Student-initiated payment — studentId comes from the auth token, not the body. */
+export const studentCreatePaymentSchema = createPaymentSchema.omit({ studentId: true });
+
 // Notification schemas
 export const createNotificationSchema = z.object({
   userId: z.string().min(1),
@@ -293,4 +296,90 @@ export const paginationSchema = z.object({
 export const dateRangeSchema = z.object({
   startDate: z.string().datetime().optional(),
   endDate: z.string().datetime().optional(),
+});
+
+// ---------- Student-facing schemas (Step 3) ----------
+
+export const updateStudentProfileSchema = z.object({
+  name: z.string().min(2).max(100).optional(),
+  phone: z.string().min(10).max(15).optional(),
+  avatar: z.string().url().optional(),
+  address: z.string().max(500).optional(),
+  parentPhone: z.string().min(10).max(15).optional(),
+  emergencyContact: z
+    .object({
+      name: z.string().min(1).max(100),
+      phone: z.string().min(10).max(15),
+      relation: z.string().min(1).max(50),
+    })
+    .optional(),
+});
+
+export const messQuerySchema = z.object({
+  type: z.enum(['hostel', 'outside']).optional(),
+  city: z.string().min(1).max(50).optional(),
+  search: z.string().min(1).max(100).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
+
+export const menuQuerySchema = z.object({
+  day: z
+    .enum(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'])
+    .optional(),
+  date: z.string().datetime().optional(),
+});
+
+export const requestSubscriptionSchema = z.object({
+  messId: z.string().min(1),
+  plan: z.enum(['monthly', 'quarterly', 'half_yearly', 'yearly']),
+  startDate: z.string().datetime().optional(),
+  autoRenew: z.boolean().default(false),
+});
+
+export const paymentQuerySchema = z.object({
+  type: z.enum(['room_rent', 'mess_subscription', 'deposit', 'maintenance', 'other']).optional(),
+  status: z.enum(['pending', 'completed', 'failed', 'refunded', 'partial']).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
+
+export const complaintQuerySchema = z.object({
+  status: z
+    .enum(['submitted', 'acknowledged', 'in_progress', 'resolved', 'closed', 'rejected'])
+    .optional(),
+  category: z
+    .enum([
+      'cleanliness',
+      'maintenance',
+      'food_quality',
+      'water_supply',
+      'electricity',
+      'internet',
+      'security',
+      'noise',
+      'roommate',
+      'mess_service',
+      'billing',
+      'other',
+    ])
+    .optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
+
+export const feedbackQuerySchema = z.object({
+  targetType: z.enum(['hostel', 'mess', 'room', 'admin', 'mess_owner']).optional(),
+  targetId: z.string().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
+
+export const notificationQuerySchema = z.object({
+  unreadOnly: z
+    .string()
+    .optional()
+    .transform((v) => v === 'true'),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
 });
