@@ -8,8 +8,17 @@ import Register from './pages/auth/Register';
 import StudentDashboard from './pages/student/Dashboard';
 import AdminDashboard from './pages/admin/Dashboard';
 import MessOwnerDashboard from './pages/mess-owner/Dashboard';
+import StudentHostels from './pages/student/Hostels';
+import StudentMess from './pages/student/Mess';
+import StudentMyRoom from './pages/student/MyRoom';
+import StudentPayments from './pages/student/Payments';
+import StudentComplaints from './pages/student/Complaints';
+import StudentFeedback from './pages/student/Feedback';
+import StudentNotifications from './pages/student/Notifications';
+import StudentSettings from './pages/student/Settings';
 import ProtectedRoute from './components/auth/ProtectedRoute';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { getDashboardPath } from './lib/navigation';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,6 +30,16 @@ const queryClient = new QueryClient({
   },
 });
 
+/**
+ * Catch-all: authenticated users land on their role dashboard (never the
+ * login page — that was the "menus throw me to login" bug), guests go to login.
+ */
+function RootRedirect() {
+  const { user, isLoading } = useAuth();
+  if (isLoading) return null;
+  return <Navigate to={user ? getDashboardPath(user.role) : '/login'} replace />;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -29,6 +48,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route element={<Layout />}>
+            {/* Student */}
             <Route
               element={
                 <ProtectedRoute allowedRoles={['student']}>
@@ -39,12 +59,78 @@ function App() {
             />
             <Route
               element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <StudentHostels />
+                </ProtectedRoute>
+              }
+              path="/student/hostels"
+            />
+            <Route
+              element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <StudentMess />
+                </ProtectedRoute>
+              }
+              path="/student/mess"
+            />
+            <Route
+              element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <StudentMyRoom />
+                </ProtectedRoute>
+              }
+              path="/student/room"
+            />
+            <Route
+              element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <StudentPayments />
+                </ProtectedRoute>
+              }
+              path="/student/payments"
+            />
+            <Route
+              element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <StudentComplaints />
+                </ProtectedRoute>
+              }
+              path="/student/complaints"
+            />
+            <Route
+              element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <StudentFeedback />
+                </ProtectedRoute>
+              }
+              path="/student/feedback"
+            />
+            <Route
+              element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <StudentNotifications />
+                </ProtectedRoute>
+              }
+              path="/student/notifications"
+            />
+            <Route
+              element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <StudentSettings />
+                </ProtectedRoute>
+              }
+              path="/student/settings"
+            />
+            {/* Admin */}
+            <Route
+              element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <AdminDashboard />
                 </ProtectedRoute>
               }
               path="/admin/dashboard"
             />
+            {/* Mess Owner */}
             <Route
               element={
                 <ProtectedRoute allowedRoles={['mess_owner']}>
@@ -54,7 +140,7 @@ function App() {
               path="/mess-owner/dashboard"
             />
           </Route>
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<RootRedirect />} />
         </Routes>
         <Toaster position="top-right" richColors theme="system" />
         <ReactQueryDevtools initialIsOpen={false} />

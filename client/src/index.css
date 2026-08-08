@@ -3,6 +3,11 @@
 /* Class-based dark mode: `.dark` on <html> */
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * HostelSaaS design tokens — professional SaaS "blue / black / white" palette.
+ * Light: white surfaces + vivid blue primary. Dark: deep navy-black surfaces
+ * (never flat black) with blue-tinted borders and a vivid blue primary.
+ */
 :root {
   --background: 0 0% 100%;
   --foreground: 222.2 84% 4.9%;
@@ -11,15 +16,15 @@
   --popover: 0 0% 100%;
   --popover-foreground: 222.2 84% 4.9%;
   --primary: 221.2 83.2% 53.3%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 210 40% 96.1%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 213 40% 96.5%;
   --secondary-foreground: 222.2 47.4% 11.2%;
-  --muted: 210 40% 96.1%;
+  --muted: 213 40% 96.5%;
   --muted-foreground: 215.4 16.3% 46.9%;
-  --accent: 210 40% 96.1%;
+  --accent: 220 60% 96%;
   --accent-foreground: 222.2 47.4% 11.2%;
   --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
+  --destructive-foreground: 0 0% 100%;
   --border: 214.3 31.8% 91.4%;
   --input: 214.3 31.8% 91.4%;
   --ring: 221.2 83.2% 53.3%;
@@ -27,25 +32,25 @@
 }
 
 .dark {
-  --background: 222.2 84% 4.9%;
-  --foreground: 210 40% 98%;
-  --card: 222.2 84% 4.9%;
-  --card-foreground: 210 40% 98%;
-  --popover: 222.2 84% 4.9%;
-  --popover-foreground: 210 40% 98%;
+  --background: 224 60% 5%;
+  --foreground: 213 30% 94%;
+  --card: 224 47% 7.5%;
+  --card-foreground: 213 30% 94%;
+  --popover: 224 47% 8%;
+  --popover-foreground: 213 30% 94%;
   --primary: 217.2 91.2% 59.8%;
-  --primary-foreground: 222.2 47.4% 11.2%;
-  --secondary: 217.2 32.6% 17.5%;
-  --secondary-foreground: 210 40% 98%;
-  --muted: 217.2 32.6% 17.5%;
-  --muted-foreground: 215 20.2% 65.1%;
-  --accent: 217.2 32.6% 17.5%;
-  --accent-foreground: 210 40% 98%;
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 217.2 32.6% 17.5%;
-  --input: 217.2 32.6% 17.5%;
-  --ring: 224.3 76.3% 48%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 224 42% 13%;
+  --secondary-foreground: 213 30% 94%;
+  --muted: 224 42% 13%;
+  --muted-foreground: 215 22% 68%;
+  --accent: 224 45% 15%;
+  --accent-foreground: 213 30% 94%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 224 40% 17%;
+  --input: 224 40% 17%;
+  --ring: 217.2 91.2% 60%;
 }
 
 /* Map CSS variables → Tailwind utilities (shadcn-style tokens) */
@@ -79,6 +84,12 @@
   * {
     border-color: hsl(var(--border));
   }
+  html {
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
@@ -86,5 +97,13 @@
       'rlig' 1,
       'calt' 1;
     -webkit-font-smoothing: antialiased;
+  }
+  /* Blue-tinted text selection */
+  ::selection {
+    background-color: hsl(var(--primary) / 0.25);
+  }
+  /* Subtle branded scrollbar in dark mode */
+  .dark * {
+    scrollbar-color: hsl(var(--border)) transparent;
   }
 }

@@ -56,12 +56,12 @@ const typeColors: Record<string, string> = {
   room_change_request: 'text-purple-500 bg-purple-500/10',
   announcement: 'text-indigo-500 bg-indigo-500/10',
   feedback_received: 'text-yellow-500 bg-yellow-500/10',
-  system: 'text-gray-500 bg-gray-500/10',
+  system: 'bg-muted text-muted-foreground',
 };
 
 export function NotificationItem({ notification }: NotificationItemProps) {
   const Icon = typeIcons[notification.type] || Bell;
-  const colorClass = typeColors[notification.type] || 'text-gray-500 bg-gray-500/10';
+  const colorClass = typeColors[notification.type] || 'bg-muted text-muted-foreground';
 
   return (
     <div

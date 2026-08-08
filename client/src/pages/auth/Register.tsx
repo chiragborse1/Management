@@ -118,7 +118,12 @@ export default function Register() {
   };
 
   return (
-    <div className="bg-muted/30 flex min-h-screen items-center justify-center px-4 py-12">
+    <div className="bg-background relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-12">
+      {/* Branded blue gradient backdrop */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgb(37_99_235/0.12),transparent_60%)] dark:bg-[radial-gradient(ellipse_at_top,rgb(59_130_246/0.14),transparent_60%)]"
+      />
       <div className="w-full max-w-2xl">
         {/* Logo */}
         <div className="mb-8 text-center">

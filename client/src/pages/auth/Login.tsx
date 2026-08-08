@@ -51,8 +51,13 @@ export default function Login() {
   };
 
   return (
-    <div className="bg-muted/30 flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-md">
+    <div className="bg-background relative flex min-h-screen items-center justify-center overflow-hidden px-4">
+      {/* Branded blue gradient backdrop (light: soft blue haze · dark: deep navy glow) */}
+      <div
+        aria-hidden
+        className="from-primary/25 dark:from-primary/20 pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgb(37_99_235/0.12),transparent_60%)] dark:bg-[radial-gradient(ellipse_at_top,rgb(59_130_246/0.14),transparent_60%)]"
+      />
+      <div className="relative w-full max-w-md">
         {/* Logo */}
         <div className="mb-8 text-center">
           <Link to="/" className="inline-flex items-center gap-2">
@@ -139,7 +144,7 @@ export default function Login() {
                 <input
                   {...register('rememberMe')}
                   type="checkbox"
-                  className="text-primary focus:ring-primary h-4 w-4 rounded border-gray-300 focus:ring-2"
+                  className="text-primary focus:ring-primary border-input h-4 w-4 rounded focus:ring-2"
                 />
                 <span className="text-muted-foreground text-sm">Remember me</span>
               </label>
