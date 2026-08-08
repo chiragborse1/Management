@@ -55,6 +55,10 @@ export const resetPasswordSchema = z
     path: ['confirmPassword'],
   });
 
+export const verifyEmailSchema = z.object({
+  token: z.string().min(1),
+});
+
 // Hostel schemas
 export const createHostelSchema = z.object({
   name: z.string().min(2).max(100),

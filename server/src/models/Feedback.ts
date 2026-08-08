@@ -129,7 +129,6 @@ const paymentSchema = new Schema<IPayment>(
     },
     referenceId: {
       type: Schema.Types.ObjectId,
-      index: true,
     },
     description: {
       type: String,

@@ -40,7 +40,7 @@ router.post('/:id/deallocate', authorize('admin'), asyncHandler(roomController.d
 router.get(
   '/',
   authorize('admin', 'student'),
-  validate(paginationSchema),
+  validate(paginationSchema, 'query'),
   asyncHandler(roomController.getRooms)
 );
 router.get('/:id', authorize('admin', 'student'), asyncHandler(roomController.getRoomById));

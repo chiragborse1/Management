@@ -58,7 +58,6 @@ const userSchema = new Schema<IUser>(
       unique: true,
       lowercase: true,
       trim: true,
-      index: true,
     },
     password: {
       type: String,
@@ -76,16 +75,9 @@ const userSchema = new Schema<IUser>(
       type: String,
       required: true,
       trim: true,
-      index: true,
     },
     avatar: {
       type: String,
-    },
-    role: {
-      type: String,
-      enum: ['student', 'admin', 'mess_owner'],
-      required: true,
-      index: true,
     },
     isActive: {
       type: Boolean,
@@ -120,9 +112,10 @@ userSchema.methods.comparePassword = async function (
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-// Indexes
-userSchema.index({ email: 1, role: 1 });
-userSchema.index({ phone: 1, role: 1 });
+// Indexes — `email` is indexed via unique:true; `phone` gets an explicit
+// index here. Note: `role` is the discriminator key (not a declared path),
+// so it cannot be indexed from the base schema.
+userSchema.index({ phone: 1 });
 
 export const User = mongoose.model<IUser>('User', userSchema);
 
@@ -161,7 +154,7 @@ const studentSchema = new Schema<IStudent>({
   },
 });
 
-export const Student = User.discriminator<IStudent>('Student', studentSchema);
+export const Student = User.discriminator<IStudent>('student', studentSchema);
 
 // Admin discriminator
 const adminSchema = new Schema<IAdmin>({
@@ -187,7 +180,7 @@ const adminSchema = new Schema<IAdmin>({
   },
 });
 
-export const Admin = User.discriminator<IAdmin>('Admin', adminSchema);
+export const Admin = User.discriminator<IAdmin>('admin', adminSchema);
 
 // MessOwner discriminator
 const messOwnerSchema = new Schema<IMessOwner>({
@@ -214,4 +207,4 @@ const messOwnerSchema = new Schema<IMessOwner>({
   },
 });
 
-export const MessOwner = User.discriminator<IMessOwner>('MessOwner', messOwnerSchema);
+export const MessOwner = User.discriminator<IMessOwner>('mess_owner', messOwnerSchema);
