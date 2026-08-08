@@ -158,7 +158,7 @@ export default function Sidebar() {
           </div>
           {!isCollapsed && (
             <button
-              onClick={logout}
+              onClick={() => void logout()}
               className="text-muted-foreground hover:text-foreground hover:bg-accent mt-3 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
             >
               <LogOut className="h-5 w-5" />

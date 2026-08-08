@@ -1,33 +1,23 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Bell, Moon, Sun, User, Settings, LogOut, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useUnreadCount } from '@/hooks';
 import { NotificationItem } from './NotificationItem';
 
 export default function TopNavbar() {
   const { user, logout } = useAuth();
-  const [isDark, setIsDark] = useState(false);
+  const { resolvedTheme, setTheme } = useTheme();
+  const { data: unreadCount } = useUnreadCount();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const notificationsRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
-  // Initialize theme from localStorage or system preference
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const shouldBeDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
-    setIsDark(shouldBeDark);
-    document.documentElement.classList.toggle('dark', shouldBeDark);
-  }, []);
-
-  const toggleTheme = () => {
-    const newTheme = !isDark;
-    setIsDark(newTheme);
-    localStorage.setItem('theme', newTheme ? 'dark' : 'light');
-    document.documentElement.classList.toggle('dark', newTheme);
-  };
+  const isDark = resolvedTheme === 'dark';
+  const toggleTheme = () => setTheme(isDark ? 'light' : 'dark');
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -69,6 +59,9 @@ export default function TopNavbar() {
       unread: false,
     },
   ];
+
+  // Fall back to the mock list's count while the real query hasn't loaded.
+  const badgeCount = unreadCount ?? mockNotifications.filter((n) => n.unread).length;
 
   if (!user) return null;
 
@@ -113,8 +106,10 @@ export default function TopNavbar() {
               aria-expanded={showNotifications}
             >
               <Bell className="h-5 w-5" />
-              {mockNotifications.some((n) => n.unread) && (
-                <span className="bg-destructive absolute top-1 right-1 h-2 w-2 rounded-full" />
+              {badgeCount > 0 && (
+                <span className="bg-destructive text-destructive-foreground absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold">
+                  {badgeCount > 9 ? '9+' : badgeCount}
+                </span>
               )}
             </button>
 
@@ -171,7 +166,7 @@ export default function TopNavbar() {
                 </button>
                 <hr className="border-border my-1" />
                 <button
-                  onClick={logout}
+                  onClick={() => void logout()}
                   className="text-destructive hover:bg-accent flex w-full items-center gap-2 px-4 py-2 text-sm"
                 >
                   <LogOut className="h-4 w-4" />

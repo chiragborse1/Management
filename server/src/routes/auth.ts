@@ -7,7 +7,6 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import {
   registerSchema,
   loginSchema,
-  refreshTokenSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
   verifyEmailSchema,
@@ -23,12 +22,9 @@ router.post(
   asyncHandler(authController.register)
 );
 router.post('/login', authLimiter, validate(loginSchema), asyncHandler(authController.login));
-router.post(
-  '/refresh',
-  authLimiter,
-  validate(refreshTokenSchema),
-  asyncHandler(authController.refreshAccessToken)
-);
+// Refresh token may arrive via HttpOnly cookie (primary) OR request body —
+// the controller resolves both, so no body-level schema is enforced here.
+router.post('/refresh', authLimiter, asyncHandler(authController.refreshAccessToken));
 router.post(
   '/forgot-password',
   passwordResetLimiter,

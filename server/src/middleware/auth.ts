@@ -18,7 +18,7 @@ export const authenticate = async (
   try {
     // Get token from Authorization header or cookie
     const authHeader = req.headers.authorization;
-    const cookieToken = req.cookies?.['hostel-saas']?.accessToken;
+    const cookieToken = req.cookies?.accessToken;
     const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : cookieToken;
 
     if (!token) {
@@ -71,7 +71,7 @@ export const optionalAuth = async (
 ): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
-    const cookieToken = req.cookies?.['hostel-saas']?.accessToken;
+    const cookieToken = req.cookies?.accessToken;
     const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : cookieToken;
 
     if (token) {

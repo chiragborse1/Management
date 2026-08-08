@@ -1,10 +1,12 @@
 import type { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
-import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { ZodError } from 'zod';
 import { fromZodError } from 'zod-validation-error';
 import { AppError } from '../utils/ApiError.js';
 import { config } from '../config/index.js';
+
+const { JsonWebTokenError, TokenExpiredError } = jwt;
 
 /** 404 for unknown routes — must be mounted after all routes. */
 export const notFoundHandler = (req: Request, res: Response): void => {

@@ -1,315 +1,285 @@
 'use client';
 
+import { Calendar, Star, Users, Utensils, Wallet } from 'lucide-react';
 import {
-  Utensils,
-  Users,
-  Star,
-  TrendingUp,
-  Wallet,
-  Calendar,
-  DollarSign,
-  Clock,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { formatCurrency } from '@/lib/utils';
+  useMesses,
+  // Defensive import: only present once the API layer exposes it. Remove if absent.
+  useTargetFeedback,
+  useWeeklyMenu,
+} from '@/hooks';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  EmptyState,
+  Skeleton,
+  StatCard,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui';
+import { formatDate } from '@/lib/utils';
+import type { Menu } from '@shared/types';
 
-const messOwnerStats = [
-  {
-    name: 'Total Subscribers',
-    value: '156',
-    change: '+12%',
-    icon: Users,
-    color: 'text-blue-500 bg-blue-500/10',
-  },
-  {
-    name: 'Monthly Revenue',
-    value: formatCurrency(485000),
-    change: '+18%',
-    icon: Wallet,
-    color: 'text-green-500 bg-green-500/10',
-  },
-  {
-    name: 'Average Rating',
-    value: '4.6',
-    change: '+0.2',
-    icon: Star,
-    color: 'text-yellow-500 bg-yellow-500/10',
-  },
-  {
-    name: 'Active Menu',
-    value: 'Week 41',
-    icon: Calendar,
-    color: 'text-purple-500 bg-purple-500/10',
-  },
-];
+type MessRef = string | { id?: string; _id?: string };
 
-const recentReviews = [
-  {
-    id: '1',
-    student: 'Rahul S.',
-    rating: 5,
-    comment: 'Excellent food quality and variety!',
-    date: 'Oct 1, 2024',
-  },
-  {
-    id: '2',
-    student: 'Priya M.',
-    rating: 4,
-    comment: 'Good taste but lunch could be better.',
-    date: 'Sep 28, 2024',
-  },
-  {
-    id: '3',
-    student: 'Amit K.',
-    rating: 5,
-    comment: 'Best mess in the area, highly recommended.',
-    date: 'Sep 25, 2024',
-  },
-  {
-    id: '4',
-    student: 'Sneha P.',
-    rating: 3,
-    comment: 'Average. Dinner timing needs improvement.',
-    date: 'Sep 22, 2024',
-  },
-];
+function recordId(ref: MessRef): string {
+  if (typeof ref === 'string') return ref;
+  return ref._id ?? ref.id ?? '';
+}
 
-const pendingRequests = [
-  { id: '1', student: 'Vikram R.', room: 'Room 203', plan: 'Monthly', date: 'Oct 2, 2024' },
-  { id: '2', student: 'Kavya S.', room: 'Room 105', plan: 'Quarterly', date: 'Oct 1, 2024' },
-  { id: '3', student: 'Arjun M.', room: 'Room 312', plan: 'Monthly', date: 'Sep 30, 2024' },
-];
+function reviewId(review: { id: string; _id?: string }): string {
+  return review._id ?? review.id;
+}
 
-const weeklyMenu = [
-  {
-    day: 'Monday',
-    breakfast: 'Idli Sambar',
-    lunch: 'Rice, Dal, Aloo Gobi',
-    dinner: 'Roti, Paneer Butter Masala',
-  },
-  {
-    day: 'Tuesday',
-    breakfast: 'Poha',
-    lunch: 'Rice, Rajma, Jeera Aloo',
-    dinner: 'Roti, Chana Masala',
-  },
-  {
-    day: 'Wednesday',
-    breakfast: 'Upma',
-    lunch: 'Rice, Sambar, Beans Poriyal',
-    dinner: 'Roti, Mix Veg',
-  },
-  {
-    day: 'Thursday',
-    breakfast: 'Dosa',
-    lunch: 'Rice, Dal, Bhindi Masala',
-    dinner: 'Roti, Dal Makhani',
-  },
-  {
-    day: 'Friday',
-    breakfast: 'Paratha',
-    lunch: 'Rice, Chole, Aloo Matar',
-    dinner: 'Roti, Shahi Paneer',
-  },
-  {
-    day: 'Saturday',
-    breakfast: 'Bread Omelette',
-    lunch: 'Biryani, Raita',
-    dinner: 'Noodles, Manchurian',
-  },
-  {
-    day: 'Sunday',
-    breakfast: 'Chole Bhature',
-    lunch: 'Puri, Aloo Sabzi, Kheer',
-    dinner: 'Rice, Dal, Papad',
-  },
-];
+const DAY_ORDER: Record<string, number> = {
+  monday: 0,
+  tuesday: 1,
+  wednesday: 2,
+  thursday: 3,
+  friday: 4,
+  saturday: 5,
+  sunday: 6,
+};
+
+const DAY_LABELS: Record<string, string> = {
+  monday: 'Monday',
+  tuesday: 'Tuesday',
+  wednesday: 'Wednesday',
+  thursday: 'Thursday',
+  friday: 'Friday',
+  saturday: 'Saturday',
+  sunday: 'Sunday',
+};
+
+function mealSummary(menu: Menu, meal: 'breakfast' | 'lunch' | 'dinner'): string {
+  const items = menu.meals[meal];
+  if (items.length === 0) return '—';
+  return items.map((item) => item.name).join(', ');
+}
+
+function StarRating({ rating }: { rating: number }) {
+  return (
+    <div className="flex items-center gap-0.5" aria-label={`${rating} out of 5 stars`}>
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Star
+          key={star}
+          className={
+            star <= Math.round(rating)
+              ? 'h-3.5 w-3.5 fill-amber-400 text-amber-400'
+              : 'text-muted-foreground h-3.5 w-3.5'
+          }
+          aria-hidden="true"
+        />
+      ))}
+    </div>
+  );
+}
 
 export default function MessOwnerDashboard() {
+  const { data: messesData, isLoading: messesLoading } = useMesses();
+  const messes = messesData?.messes ?? [];
+  const firstMess = messes[0];
+
+  const firstMessId = firstMess ? recordId(firstMess) : '';
+  const { data: menuData, isLoading: menuLoading, error: menuError } = useWeeklyMenu(firstMessId);
+  const { data: feedbackData, isLoading: feedbackLoading } = useTargetFeedback('mess', firstMessId);
+
+  const avgRating =
+    messes.length > 0 ? messes.reduce((sum, mess) => sum + mess.rating, 0) / messes.length : 0;
+  const totalReviews = messes.reduce((sum, mess) => sum + mess.totalReviews, 0);
+
+  const menus = menuData?.menus ?? [];
+  const sortedMenus = [...menus].sort(
+    (a, b) => (DAY_ORDER[a.dayOfWeek] ?? 99) - (DAY_ORDER[b.dayOfWeek] ?? 99)
+  );
+
   return (
     <div className="space-y-6">
-      {/* Page Header */}
+      {/* Header */}
       <div>
-        <h1 className="text-foreground text-2xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">Welcome back! Here's your mess business overview.</p>
+        <h1 className="text-foreground text-2xl font-bold">Mess Owner Dashboard</h1>
+        <p className="text-muted-foreground">Here's how your mess is doing.</p>
       </div>
 
-      {/* Stats Grid */}
+      {/* Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {messOwnerStats.map((stat) => (
-          <div key={stat.name} className="bg-card border-border rounded-xl border p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-muted-foreground text-sm font-medium">{stat.name}</p>
-                <p className="text-foreground mt-1 text-2xl font-bold">{stat.value}</p>
-                {stat.change && (
-                  <p className="mt-1 text-sm font-medium text-green-500">
-                    {stat.change} vs last month
-                  </p>
-                )}
-              </div>
-              <div className={cn('rounded-xl p-3', stat.color)}>
-                <stat.icon className="h-6 w-6" />
-              </div>
-            </div>
-          </div>
-        ))}
+        <StatCard
+          label="My Mess"
+          value={
+            messesLoading ? <Skeleton className="h-7 w-32" /> : firstMess ? firstMess.name : '—'
+          }
+          sub={
+            firstMess
+              ? `${firstMess.city} · ${firstMess.type}`
+              : messesLoading
+                ? undefined
+                : 'Owner-scoped mess data arrives in Step 5'
+          }
+          icon={Utensils}
+        />
+        <StatCard
+          label="Average Rating"
+          value={
+            messesLoading ? (
+              <Skeleton className="h-7 w-14" />
+            ) : messes.length > 0 ? (
+              avgRating.toFixed(1)
+            ) : (
+              '—'
+            )
+          }
+          sub={messes.length > 0 ? 'Across listed messes' : undefined}
+          icon={Star}
+        />
+        <StatCard
+          label="Total Reviews"
+          value={messesLoading ? <Skeleton className="h-7 w-14" /> : String(totalReviews)}
+          sub={messes.length > 0 ? 'Cumulative review count' : undefined}
+          icon={Star}
+        />
+        <StatCard
+          label="Weekly Menu"
+          value={menuLoading ? <Skeleton className="h-7 w-20" /> : `${menus.length}/7 days`}
+          sub={menus.length > 0 ? 'Published this week' : 'Menu publishing arrives in Step 5'}
+          icon={Calendar}
+        />
       </div>
 
-      {/* Main Content */}
+      {/* Weekly menu + placeholders */}
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left Column - Revenue Chart & Pending Requests */}
-        <div className="space-y-6 lg:col-span-2">
-          {/* Revenue Chart Placeholder */}
-          <div className="bg-card border-border rounded-xl border p-6">
-            <h2 className="mb-4 text-lg font-semibold">Revenue Overview</h2>
-            <div className="text-muted-foreground flex h-64 items-center justify-center">
-              <div className="text-center">
-                <TrendingUp className="mx-auto mb-2 h-12 w-12 opacity-30" />
-                <p>Chart placeholder - Recharts integration pending</p>
-                <p className="text-sm">Monthly: ₹4.85L | Subscribers: 156</p>
+        {/* Weekly Menu */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>This Week's Menu</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {menuLoading ? (
+              <div className="space-y-3">
+                {[0, 1, 2, 3].map((row) => (
+                  <Skeleton key={row} className="h-10 w-full" />
+                ))}
               </div>
-            </div>
-          </div>
-
-          {/* Pending Requests */}
-          <div className="bg-card border-border rounded-xl border p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Pending Subscription Requests</h2>
-              <button className="text-primary text-sm hover:underline">View all</button>
-            </div>
-            <div className="space-y-3">
-              {pendingRequests.map((request) => (
-                <div
-                  key={request.id}
-                  className="border-border hover:bg-accent/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
-                >
-                  <div>
-                    <p className="text-foreground text-sm font-medium">{request.student}</p>
-                    <p className="text-muted-foreground text-xs">
-                      {request.room} • {request.plan} Plan
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="rounded-full bg-yellow-500 px-2 py-0.5 text-xs font-medium text-yellow-500/10 text-yellow-700 dark:text-yellow-300">
-                      Pending
-                    </span>
-                    <button className="rounded bg-green-500/10 px-3 py-1.5 text-xs font-medium text-green-500 hover:bg-green-500/20">
-                      Accept
-                    </button>
-                    <button className="rounded bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-500/20">
-                      Reject
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Weekly Menu */}
-          <div className="bg-card border-border rounded-xl border p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold">This Week's Menu</h2>
-              <button className="text-primary text-sm hover:underline">Edit Menu</button>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-border text-muted-foreground border-b text-left">
-                    <th className="pb-2 font-medium">Day</th>
-                    <th className="pb-2 font-medium">Breakfast</th>
-                    <th className="pb-2 font-medium">Lunch</th>
-                    <th className="pb-2 font-medium">Dinner</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {weeklyMenu.map((day, index) => (
-                    <tr key={day.day} className={index % 2 === 0 ? 'bg-muted/30' : ''}>
-                      <td className="py-3 font-medium">{day.day}</td>
-                      <td className="text-muted-foreground py-3">{day.breakfast}</td>
-                      <td className="text-muted-foreground py-3">{day.lunch}</td>
-                      <td className="text-muted-foreground py-3">{day.dinner}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column - Recent Reviews */}
-        <div className="space-y-6">
-          {/* Recent Reviews */}
-          <div className="bg-card border-border rounded-xl border p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Recent Reviews</h2>
-              <button className="text-primary text-sm hover:underline">View all</button>
-            </div>
-            <div className="space-y-4">
-              {recentReviews.map((review) => (
-                <div key={review.id} className="border-border rounded-lg border p-3">
-                  <div className="mb-1 flex items-center justify-between">
-                    <p className="text-sm font-medium">{review.student}</p>
-                    <span className="text-muted-foreground text-xs">{review.date}</span>
-                  </div>
-                  <div className="mb-1 flex items-center gap-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={cn(
-                          'h-4 w-4',
-                          i < review.rating
-                            ? 'fill-yellow-400 text-yellow-400'
-                            : 'text-muted-foreground'
-                        )}
-                      />
+            ) : menuError ? (
+              <EmptyState
+                icon={Calendar}
+                title="Couldn't load the weekly menu"
+                description="Something went wrong while fetching the menu for this mess."
+              />
+            ) : sortedMenus.length === 0 ? (
+              <EmptyState
+                icon={Calendar}
+                title="No weekly menu published yet"
+                description="Menu publishing tools arrive with the Mess Owner module (Step 5)."
+              />
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Day</TableHead>
+                      <TableHead>Breakfast</TableHead>
+                      <TableHead>Lunch</TableHead>
+                      <TableHead>Dinner</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {sortedMenus.map((menu) => (
+                      <TableRow key={menu.id}>
+                        <TableCell className="text-foreground font-medium">
+                          {DAY_LABELS[menu.dayOfWeek] ?? menu.dayOfWeek}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {mealSummary(menu, 'breakfast')}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {mealSummary(menu, 'lunch')}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {mealSummary(menu, 'dinner')}
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </div>
-                  <p className="text-muted-foreground text-sm">{review.comment}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-          {/* Quick Stats */}
-          <div className="bg-card border-border rounded-xl border p-6">
-            <h2 className="mb-4 text-lg font-semibold">Quick Stats</h2>
-            <div className="space-y-3">
-              <div className="bg-muted/30 flex items-center justify-between rounded-lg p-3">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-lg bg-blue-500/10 p-2 text-blue-500">
-                    <DollarSign className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Avg. Revenue/Student</p>
-                    <p className="text-muted-foreground text-xs">₹3,109/month</p>
-                  </div>
+        {/* Placeholders */}
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Subscribers</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <EmptyState
+                icon={Users}
+                title="Subscription management arrives in Step 5 (Mess Owner module)"
+                description="Subscriber lists, plan renewals, and approvals will live here."
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Revenue</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <EmptyState
+                icon={Wallet}
+                title="Revenue analytics arrive in Step 5 (Mess Owner module)"
+                description="Collections, dues, and revenue trends will show up here."
+              />
+            </CardContent>
+          </Card>
+
+          {/* Recent reviews */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Reviews</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {feedbackLoading ? (
+                <div className="space-y-3">
+                  {[0, 1, 2].map((row) => (
+                    <Skeleton key={row} className="h-16 w-full" />
+                  ))}
                 </div>
-              </div>
-              <div className="bg-muted/30 flex items-center justify-between rounded-lg p-3">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-lg bg-green-500/10 p-2 text-green-500">
-                    <Clock className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Avg. Prep Time</p>
-                    <p className="text-muted-foreground text-xs">25 minutes</p>
-                  </div>
+              ) : !feedbackData || feedbackData.feedback.length === 0 ? (
+                <EmptyState
+                  icon={Star}
+                  title="No reviews yet"
+                  description={
+                    firstMessId
+                      ? "Students haven't rated this mess yet."
+                      : 'No mess linked to your account yet.'
+                  }
+                />
+              ) : (
+                <div className="space-y-3">
+                  {feedbackData.feedback.slice(0, 4).map((review) => (
+                    <div key={reviewId(review)} className="border-border rounded-lg border p-3">
+                      <div className="mb-1 flex items-center justify-between gap-2">
+                        <StarRating rating={review.rating} />
+                        <span className="text-muted-foreground text-xs">
+                          {formatDate(review.createdAt)}
+                        </span>
+                      </div>
+                      {review.comment && (
+                        <p className="text-muted-foreground text-sm">{review.comment}</p>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              </div>
-              <div className="bg-muted/30 flex items-center justify-between rounded-lg p-3">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-lg bg-purple-500/10 p-2 text-purple-500">
-                    <Utensils className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Menu Variety Score</p>
-                    <p className="text-muted-foreground text-xs">8.5/10</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

@@ -19,6 +19,10 @@ import {
   Utensils,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import { getApiErrorMessage } from '@/lib/errors';
+import { getDashboardPath } from '@/lib/navigation';
+import type { UserRole } from '@shared/types';
 
 const registerSchema = z
   .object({
@@ -51,7 +55,7 @@ const registerSchema = z
 
 type RegisterFormData = z.infer<typeof registerSchema>;
 
-type RoleValue = 'student' | 'admin' | 'mess_owner';
+type RoleValue = UserRole;
 
 const roleOptions: Array<{
   value: RoleValue;
@@ -81,8 +85,9 @@ const roleOptions: Array<{
 
 export default function Register() {
   const navigate = useNavigate();
+  const { register: registerUser } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     register,
@@ -97,17 +102,18 @@ export default function Register() {
 
   const watchedRole = watch('role');
 
-  const onSubmit = async (_data: RegisterFormData) => {
-    setIsLoading(true);
+  const onSubmit = async (data: RegisterFormData) => {
+    setIsSubmitting(true);
     try {
-      // TODO: Call register API
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const { confirmPassword: _confirmPassword, ...payload } = data;
+      void _confirmPassword;
+      const newUser = await registerUser(payload);
       toast.success('Account created successfully!');
-      navigate('/login');
-    } catch {
-      toast.error('Registration failed. Please try again.');
+      navigate(getDashboardPath(newUser.role), { replace: true });
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, 'Registration failed. Please try again.'));
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -455,14 +461,14 @@ export default function Register() {
             {/* Submit */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isSubmitting}
               className={cn(
                 'text-primary-foreground bg-primary w-full rounded-lg px-4 py-2.5 font-medium',
                 'hover:bg-primary/90 focus:ring-primary focus:ring-2 focus:ring-offset-2 focus:outline-none',
                 'transition-colors disabled:cursor-not-allowed disabled:opacity-50'
               )}
             >
-              {isLoading ? (
+              {isSubmitting ? (
                 <span className="flex items-center justify-center gap-2">
                   <Loader2 className="h-5 w-5 animate-spin" />
                   Creating account...
