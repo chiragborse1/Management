@@ -41,8 +41,13 @@ export default function Login() {
     try {
       const loggedInUser = await login(data.email, data.password, data.rememberMe);
       toast.success('Welcome back!');
+      // Only honor a stored "from" route when it belongs to the logged-in
+      // role — otherwise a cross-role redirect hits ProtectedRoute and shows
+      // a confusing "you don't have access" toast (e.g. an admin who was
+      // asked to log in from a student page).
       const from = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname;
-      navigate(from ?? getDashboardPath(loggedInUser.role), { replace: true });
+      const safeFrom = from?.startsWith(`/${loggedInUser.role}`) ? from : undefined;
+      navigate(safeFrom ?? getDashboardPath(loggedInUser.role), { replace: true });
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'Invalid credentials'));
     } finally {
