@@ -11,3 +11,15 @@ export function getDashboardPath(role: UserRole): string {
       return '/student/dashboard';
   }
 }
+
+/** Route for a role's profile/settings page (used by the top-nav user menu). */
+export function getSettingsPath(role: UserRole): string {
+  switch (role) {
+    case 'admin':
+      return '/admin/settings';
+    case 'mess_owner':
+      return '/mess-owner/settings';
+    case 'student':
+      return '/student/settings';
+  }
+}
