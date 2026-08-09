@@ -8,6 +8,11 @@ import Register from './pages/auth/Register';
 import StudentDashboard from './pages/student/Dashboard';
 import AdminDashboard from './pages/admin/Dashboard';
 import MessOwnerDashboard from './pages/mess-owner/Dashboard';
+import MessOwnerMyMess from './pages/mess-owner/MyMess';
+import MessOwnerMenu from './pages/mess-owner/Menu';
+import MessOwnerRequests from './pages/mess-owner/Requests';
+import MessOwnerReviews from './pages/mess-owner/Reviews';
+import MessOwnerRevenue from './pages/mess-owner/Revenue';
 import StudentHostels from './pages/student/Hostels';
 import StudentMess from './pages/student/Mess';
 import StudentMyRoom from './pages/student/MyRoom';
@@ -138,6 +143,54 @@ function App() {
                 </ProtectedRoute>
               }
               path="/mess-owner/dashboard"
+            />
+            <Route
+              element={
+                <ProtectedRoute allowedRoles={['mess_owner']}>
+                  <MessOwnerMyMess />
+                </ProtectedRoute>
+              }
+              path="/mess-owner/profile"
+            />
+            <Route
+              element={
+                <ProtectedRoute allowedRoles={['mess_owner']}>
+                  <MessOwnerMenu />
+                </ProtectedRoute>
+              }
+              path="/mess-owner/menu"
+            />
+            <Route
+              element={
+                <ProtectedRoute allowedRoles={['mess_owner']}>
+                  <MessOwnerRequests />
+                </ProtectedRoute>
+              }
+              path="/mess-owner/subscriptions"
+            />
+            <Route
+              element={
+                <ProtectedRoute allowedRoles={['mess_owner']}>
+                  <MessOwnerReviews />
+                </ProtectedRoute>
+              }
+              path="/mess-owner/reviews"
+            />
+            <Route
+              element={
+                <ProtectedRoute allowedRoles={['mess_owner']}>
+                  <MessOwnerRevenue />
+                </ProtectedRoute>
+              }
+              path="/mess-owner/revenue"
+            />
+            <Route
+              element={
+                <ProtectedRoute allowedRoles={['mess_owner']}>
+                  <MessOwnerMyMess />
+                </ProtectedRoute>
+              }
+              path="/mess-owner/settings"
             />
           </Route>
           <Route path="*" element={<RootRedirect />} />

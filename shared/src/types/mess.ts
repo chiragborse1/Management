@@ -1,5 +1,8 @@
 export interface Mess {
-  id: string;
+  /** Mongoose document id — the raw API returns `_id`, not `id`. */
+  _id: string;
+  /** Present only if a consumer maps it; the raw API does not return `id`. */
+  id?: string;
   name: string;
   description: string;
   type: MessType;

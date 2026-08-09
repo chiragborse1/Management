@@ -9,6 +9,7 @@ import complaintRoutes from './complaint.js';
 import feedbackRoutes from './feedback.js';
 import notificationRoutes from './notification.js';
 import studentRoutes from './student.js';
+import messOwnerRoutes from './messOwner.js';
 
 /** Mounts every API sub-router under /api/<resource>. */
 const routes = (app: Express): void => {
@@ -22,6 +23,7 @@ const routes = (app: Express): void => {
   app.use('/api/feedback', feedbackRoutes);
   app.use('/api/notifications', notificationRoutes);
   app.use('/api/students', studentRoutes);
+  app.use('/api/mess-owner', messOwnerRoutes);
 };
 
 export default routes;

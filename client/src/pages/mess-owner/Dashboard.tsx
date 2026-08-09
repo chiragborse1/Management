@@ -1,65 +1,41 @@
 'use client';
 
-import { Calendar, Star, Users, Utensils, Wallet } from 'lucide-react';
+import { useState } from 'react';
+import { CalendarDays, Check, Star, Users, Wallet, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import {
-  useMesses,
-  // Defensive import: only present once the API layer exposes it. Remove if absent.
-  useTargetFeedback,
-  useWeeklyMenu,
+  useAcceptSubscription,
+  useMessStats,
+  useMyMess,
+  useMyReviews,
+  useRejectSubscription,
+  useSubscriptionRequests,
 } from '@/hooks';
+import type { OwnerSubscription } from '@/hooks';
 import {
+  Button,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   EmptyState,
+  Label,
+  Modal,
   Skeleton,
   StatCard,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Textarea,
 } from '@/components/ui';
-import { formatDate } from '@/lib/utils';
-import type { Menu } from '@shared/types';
+import { formatCurrency, formatDate } from '@/lib/utils';
 
-type MessRef = string | { id?: string; _id?: string };
-
-function recordId(ref: MessRef): string {
-  if (typeof ref === 'string') return ref;
-  return ref._id ?? ref.id ?? '';
+function prettyLabel(value: string): string {
+  return value.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-function reviewId(review: { id: string; _id?: string }): string {
-  return review._id ?? review.id;
-}
-
-const DAY_ORDER: Record<string, number> = {
-  monday: 0,
-  tuesday: 1,
-  wednesday: 2,
-  thursday: 3,
-  friday: 4,
-  saturday: 5,
-  sunday: 6,
-};
-
-const DAY_LABELS: Record<string, string> = {
-  monday: 'Monday',
-  tuesday: 'Tuesday',
-  wednesday: 'Wednesday',
-  thursday: 'Thursday',
-  friday: 'Friday',
-  saturday: 'Saturday',
-  sunday: 'Sunday',
-};
-
-function mealSummary(menu: Menu, meal: 'breakfast' | 'lunch' | 'dinner'): string {
-  const items = menu.meals[meal];
-  if (items.length === 0) return '—';
-  return items.map((item) => item.name).join(', ');
+function studentName(subscription: OwnerSubscription): string {
+  return typeof subscription.studentId === 'string'
+    ? subscription.studentId
+    : subscription.studentId.name;
 }
 
 function StarRating({ rating }: { rating: number }) {
@@ -81,207 +57,272 @@ function StarRating({ rating }: { rating: number }) {
 }
 
 export default function MessOwnerDashboard() {
-  const { data: messesData, isLoading: messesLoading } = useMesses();
-  const messes = messesData?.messes ?? [];
-  const firstMess = messes[0];
+  const { user } = useAuth();
+  const { data: profileData, isLoading: profileLoading } = useMyMess();
+  const { data: statsData, isLoading: statsLoading } = useMessStats();
+  const { data: pendingData, isLoading: pendingLoading } = useSubscriptionRequests('pending');
+  const { data: reviewsData, isLoading: reviewsLoading } = useMyReviews();
 
-  const firstMessId = firstMess ? recordId(firstMess) : '';
-  const { data: menuData, isLoading: menuLoading, error: menuError } = useWeeklyMenu(firstMessId);
-  const { data: feedbackData, isLoading: feedbackLoading } = useTargetFeedback('mess', firstMessId);
+  const mess = profileData?.mess ?? null;
+  const stats = statsData?.stats;
+  const pending = pendingData?.requests ?? [];
+  const reviews = reviewsData?.feedback ?? [];
 
-  const avgRating =
-    messes.length > 0 ? messes.reduce((sum, mess) => sum + mess.rating, 0) / messes.length : 0;
-  const totalReviews = messes.reduce((sum, mess) => sum + mess.totalReviews, 0);
+  const [rejecting, setRejecting] = useState<OwnerSubscription | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
+  const acceptSubscription = useAcceptSubscription();
+  const rejectSubscription = useRejectSubscription();
 
-  const menus = menuData?.menus ?? [];
-  const sortedMenus = [...menus].sort(
-    (a, b) => (DAY_ORDER[a.dayOfWeek] ?? 99) - (DAY_ORDER[b.dayOfWeek] ?? 99)
-  );
+  const firstName = user?.name.split(' ')[0] ?? 'there';
+
+  function closeReject(): void {
+    setRejecting(null);
+    setRejectReason('');
+  }
+
+  function handleReject(): void {
+    if (!rejecting) return;
+    rejectSubscription.mutate(
+      { id: rejecting._id, reason: rejectReason.trim() || undefined },
+      { onSuccess: closeReject }
+    );
+  }
+
+  if (profileLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-4 w-80" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Skeleton className="h-28" />
+          <Skeleton className="h-28" />
+          <Skeleton className="h-28" />
+          <Skeleton className="h-28" />
+        </div>
+        <div className="grid gap-6 lg:grid-cols-3">
+          <Skeleton className="h-72 lg:col-span-2" />
+          <Skeleton className="h-72" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!mess) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-foreground text-2xl font-bold">Welcome back, {firstName}</h1>
+          <p className="text-muted-foreground">Here's how your mess is doing.</p>
+        </div>
+        <EmptyState
+          icon={Users}
+          title="Create your mess profile to get started"
+          description="Set up your mess details, menu, and pricing so students can find and subscribe to you."
+          action={
+            <Link to="/mess-owner/profile">
+              <Button>Create Mess Profile</Button>
+            </Link>
+          }
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
-        <h1 className="text-foreground text-2xl font-bold">Mess Owner Dashboard</h1>
+        <h1 className="text-foreground text-2xl font-bold">Welcome back, {firstName}</h1>
         <p className="text-muted-foreground">Here's how your mess is doing.</p>
       </div>
 
-      {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          label="My Mess"
+          label="Subscribers"
+          value={statsLoading ? <Skeleton className="h-7 w-14" /> : String(stats?.subscribers ?? 0)}
+          icon={Users}
+        />
+        <StatCard
+          label="Pending Requests"
           value={
-            messesLoading ? <Skeleton className="h-7 w-32" /> : firstMess ? firstMess.name : '—'
+            statsLoading ? <Skeleton className="h-7 w-14" /> : String(stats?.pendingRequests ?? 0)
           }
-          sub={
-            firstMess
-              ? `${firstMess.city} · ${firstMess.type}`
-              : messesLoading
-                ? undefined
-                : 'Owner-scoped mess data arrives in Step 5'
+          icon={CalendarDays}
+        />
+        <StatCard
+          label="Monthly Revenue"
+          value={
+            statsLoading ? (
+              <Skeleton className="h-7 w-24" />
+            ) : (
+              formatCurrency(stats?.monthlyRevenue ?? 0)
+            )
           }
-          icon={Utensils}
+          icon={Wallet}
         />
         <StatCard
           label="Average Rating"
           value={
-            messesLoading ? (
+            statsLoading ? (
               <Skeleton className="h-7 w-14" />
-            ) : messes.length > 0 ? (
-              avgRating.toFixed(1)
+            ) : stats ? (
+              stats.avgRating.toFixed(1)
             ) : (
               '—'
             )
           }
-          sub={messes.length > 0 ? 'Across listed messes' : undefined}
           icon={Star}
-        />
-        <StatCard
-          label="Total Reviews"
-          value={messesLoading ? <Skeleton className="h-7 w-14" /> : String(totalReviews)}
-          sub={messes.length > 0 ? 'Cumulative review count' : undefined}
-          icon={Star}
-        />
-        <StatCard
-          label="Weekly Menu"
-          value={menuLoading ? <Skeleton className="h-7 w-20" /> : `${menus.length}/7 days`}
-          sub={menus.length > 0 ? 'Published this week' : 'Menu publishing arrives in Step 5'}
-          icon={Calendar}
         />
       </div>
 
-      {/* Weekly menu + placeholders */}
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Weekly Menu */}
         <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>This Week's Menu</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between gap-2">
+            <CardTitle>Pending Requests</CardTitle>
+            <Link
+              to="/mess-owner/subscriptions"
+              className="text-primary hover:text-primary/80 text-sm font-medium"
+            >
+              View all
+            </Link>
           </CardHeader>
           <CardContent>
-            {menuLoading ? (
+            {pendingLoading ? (
               <div className="space-y-3">
-                {[0, 1, 2, 3].map((row) => (
-                  <Skeleton key={row} className="h-10 w-full" />
+                {[0, 1, 2].map((row) => (
+                  <Skeleton key={row} className="h-16 w-full" />
                 ))}
               </div>
-            ) : menuError ? (
+            ) : pending.length === 0 ? (
               <EmptyState
-                icon={Calendar}
-                title="Couldn't load the weekly menu"
-                description="Something went wrong while fetching the menu for this mess."
-              />
-            ) : sortedMenus.length === 0 ? (
-              <EmptyState
-                icon={Calendar}
-                title="No weekly menu published yet"
-                description="Menu publishing tools arrive with the Mess Owner module (Step 5)."
+                icon={CalendarDays}
+                title="No pending requests"
+                description="New subscription requests will appear here."
               />
             ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Day</TableHead>
-                      <TableHead>Breakfast</TableHead>
-                      <TableHead>Lunch</TableHead>
-                      <TableHead>Dinner</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {sortedMenus.map((menu) => (
-                      <TableRow key={menu.id}>
-                        <TableCell className="text-foreground font-medium">
-                          {DAY_LABELS[menu.dayOfWeek] ?? menu.dayOfWeek}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {mealSummary(menu, 'breakfast')}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {mealSummary(menu, 'lunch')}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {mealSummary(menu, 'dinner')}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+              <div className="space-y-3">
+                {pending.slice(0, 3).map((request) => (
+                  <div
+                    key={request._id}
+                    className="border-border flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-foreground truncate text-sm font-medium">
+                        {studentName(request)}
+                      </p>
+                      <p className="text-muted-foreground text-xs">
+                        {prettyLabel(request.plan)} · {formatDate(request.createdAt)}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => acceptSubscription.mutate(request._id)}
+                        isLoading={
+                          acceptSubscription.isPending &&
+                          acceptSubscription.variables === request._id
+                        }
+                      >
+                        <Check className="h-4 w-4" aria-hidden="true" />
+                        Accept
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => {
+                          setRejectReason('');
+                          setRejecting(request);
+                        }}
+                      >
+                        <X className="h-4 w-4" aria-hidden="true" />
+                        Reject
+                      </Button>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Placeholders */}
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Subscribers</CardTitle>
-            </CardHeader>
-            <CardContent>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between gap-2">
+            <CardTitle>Recent Reviews</CardTitle>
+            <Link
+              to="/mess-owner/reviews"
+              className="text-primary hover:text-primary/80 text-sm font-medium"
+            >
+              View all
+            </Link>
+          </CardHeader>
+          <CardContent>
+            {reviewsLoading ? (
+              <div className="space-y-3">
+                {[0, 1, 2].map((row) => (
+                  <Skeleton key={row} className="h-16 w-full" />
+                ))}
+              </div>
+            ) : reviews.length === 0 ? (
               <EmptyState
-                icon={Users}
-                title="Subscription management arrives in Step 5 (Mess Owner module)"
-                description="Subscriber lists, plan renewals, and approvals will live here."
+                icon={Star}
+                title="No reviews yet"
+                description="Student ratings will show up here."
               />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Revenue</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <EmptyState
-                icon={Wallet}
-                title="Revenue analytics arrive in Step 5 (Mess Owner module)"
-                description="Collections, dues, and revenue trends will show up here."
-              />
-            </CardContent>
-          </Card>
-
-          {/* Recent reviews */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Reviews</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {feedbackLoading ? (
-                <div className="space-y-3">
-                  {[0, 1, 2].map((row) => (
-                    <Skeleton key={row} className="h-16 w-full" />
-                  ))}
-                </div>
-              ) : !feedbackData || feedbackData.feedback.length === 0 ? (
-                <EmptyState
-                  icon={Star}
-                  title="No reviews yet"
-                  description={
-                    firstMessId
-                      ? "Students haven't rated this mess yet."
-                      : 'No mess linked to your account yet.'
-                  }
-                />
-              ) : (
-                <div className="space-y-3">
-                  {feedbackData.feedback.slice(0, 4).map((review) => (
-                    <div key={reviewId(review)} className="border-border rounded-lg border p-3">
-                      <div className="mb-1 flex items-center justify-between gap-2">
-                        <StarRating rating={review.rating} />
-                        <span className="text-muted-foreground text-xs">
-                          {formatDate(review.createdAt)}
-                        </span>
-                      </div>
-                      {review.comment && (
-                        <p className="text-muted-foreground text-sm">{review.comment}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+            ) : (
+              <div className="space-y-3">
+                {reviews.slice(0, 3).map((review) => (
+                  <div key={review._id ?? review.id ?? review.createdAt}>
+                    <StarRating rating={review.rating} />
+                    {review.comment && (
+                      <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">
+                        {review.comment}
+                      </p>
+                    )}
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {review.isAnonymous ? 'Anonymous' : 'Verified student'} ·{' '}
+                      {formatDate(review.createdAt)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
+
+      <Modal
+        open={rejecting !== null}
+        onClose={closeReject}
+        title="Reject subscription request?"
+        description={
+          rejecting
+            ? `Reject ${studentName(rejecting)}'s ${prettyLabel(rejecting.plan)} request. You can add an optional reason for the student.`
+            : undefined
+        }
+        footer={
+          <>
+            <Button variant="outline" onClick={closeReject} disabled={rejectSubscription.isPending}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleReject}
+              isLoading={rejectSubscription.isPending}
+            >
+              Reject
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-1.5">
+          <Label htmlFor="reject-reason">Reason (optional)</Label>
+          <Textarea
+            id="reject-reason"
+            value={rejectReason}
+            onChange={(event) => setRejectReason(event.target.value)}
+            placeholder="e.g. No seats available this month"
+          />
+        </div>
+      </Modal>
     </div>
   );
 }

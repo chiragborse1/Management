@@ -383,3 +383,13 @@ export const notificationQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
+
+// ---------- Mess Owner schemas (Step 5) ----------
+
+export const subscriptionActionSchema = z.object({
+  reason: z.string().max(500).optional(),
+});
+
+export const menuDayParamSchema = z.object({
+  dayOfWeek: z.enum(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']),
+});
