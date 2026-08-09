@@ -1,16 +1,19 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Bell, Moon, Sun, User, Settings, LogOut, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUnreadCount } from '@/hooks';
+import { getSettingsPath } from '@/lib/navigation';
 import { NotificationItem } from './NotificationItem';
 
 export default function TopNavbar() {
   const { user, logout } = useAuth();
   const { resolvedTheme, setTheme } = useTheme();
   const { data: unreadCount } = useUnreadCount();
+  const navigate = useNavigate();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const notificationsRef = useRef<HTMLDivElement>(null);
@@ -156,11 +159,17 @@ export default function TopNavbar() {
                     {user.role.replace('_', ' ')}
                   </p>
                 </div>
-                <button className="text-foreground hover:bg-accent flex w-full items-center gap-2 px-4 py-2 text-sm">
+                <button
+                  onClick={() => navigate(getSettingsPath(user.role))}
+                  className="text-foreground hover:bg-accent flex w-full items-center gap-2 px-4 py-2 text-sm"
+                >
                   <User className="h-4 w-4" />
                   Profile
                 </button>
-                <button className="text-foreground hover:bg-accent flex w-full items-center gap-2 px-4 py-2 text-sm">
+                <button
+                  onClick={() => navigate(getSettingsPath(user.role))}
+                  className="text-foreground hover:bg-accent flex w-full items-center gap-2 px-4 py-2 text-sm"
+                >
                   <Settings className="h-4 w-4" />
                   Settings
                 </button>
