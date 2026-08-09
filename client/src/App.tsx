@@ -22,6 +22,7 @@ import StudentFeedback from './pages/student/Feedback';
 import StudentNotifications from './pages/student/Notifications';
 import StudentSettings from './pages/student/Settings';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import ModulePlaceholder from './components/ModulePlaceholder';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { getDashboardPath } from './lib/navigation';
 
@@ -135,6 +136,39 @@ function App() {
               }
               path="/admin/dashboard"
             />
+            {/* Admin module routes — registered so sidebar navigation visibly
+                works; real pages land with the admin module (next build step). */}
+            {(
+              [
+                [
+                  '/admin/students',
+                  'Students',
+                  'Manage hostel students, allocations and profiles.',
+                ],
+                ['/admin/rooms', 'Rooms', 'Manage rooms, occupancy and allocations.'],
+                ['/admin/hostel', 'Hostel Info', 'Edit your hostel&apos;s details and facilities.'],
+                ['/admin/mess', 'Mess Management', 'Manage the hostel mess and its menu.'],
+                [
+                  '/admin/complaints',
+                  'Complaints',
+                  'Track and resolve student complaints (kanban).',
+                ],
+                ['/admin/payments', 'Payments', 'Review and confirm student payments.'],
+                ['/admin/reports', 'Reports', 'Export PDF / Excel reports.'],
+                ['/admin/analytics', 'Analytics', 'Charts and insights across the hostel.'],
+                ['/admin/settings', 'Settings', 'Admin account and hostel settings.'],
+              ] as const
+            ).map(([path, title, description]) => (
+              <Route
+                key={path}
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <ModulePlaceholder title={title} description={description} />
+                  </ProtectedRoute>
+                }
+                path={path}
+              />
+            ))}
             {/* Mess Owner */}
             <Route
               element={

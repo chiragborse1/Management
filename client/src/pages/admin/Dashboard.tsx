@@ -187,7 +187,7 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          {/* Step 5 placeholder — admin module */}
+          {/* Next build step — admin module */}
           <Card>
             <CardHeader>
               <CardTitle>Complaints Kanban</CardTitle>
@@ -195,7 +195,7 @@ export default function AdminDashboard() {
             <CardContent>
               <EmptyState
                 icon={MessageSquare}
-                title="Admin analytics arrive with the admin module (Step 5)"
+                title="Admin analytics arrive with the admin module (next build step)"
                 description="Room occupancy, complaint triage, and revenue analytics will live here once the admin module ships."
               />
             </CardContent>
