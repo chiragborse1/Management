@@ -22,7 +22,7 @@ interface DonutChartProps {
 /** Theme-aware palette (Tailwind classes, resolved against .dark). */
 const PALETTE = [
   { fill: 'fill-primary', dot: 'bg-primary' },
-  { fill: 'fill-sky-500 dark:fill-sky-400', dot: 'bg-sky-500 dark:bg-sky-400' },
+  { fill: 'fill-foreground', dot: 'bg-foreground' },
   { fill: 'fill-emerald-500 dark:fill-emerald-400', dot: 'bg-emerald-500 dark:bg-emerald-400' },
   { fill: 'fill-amber-500 dark:fill-amber-400', dot: 'bg-amber-500 dark:bg-amber-400' },
   { fill: 'fill-violet-500 dark:fill-violet-400', dot: 'bg-violet-500 dark:bg-violet-400' },
