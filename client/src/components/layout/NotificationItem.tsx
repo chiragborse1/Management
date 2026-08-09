@@ -43,7 +43,7 @@ const typeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
 
 const typeColors: Record<string, string> = {
   complaint_submitted: 'text-orange-500 bg-orange-500/10',
-  complaint_updated: 'text-blue-500 bg-blue-500/10',
+  complaint_updated: 'bg-secondary text-secondary-foreground',
   complaint_resolved: 'text-green-500 bg-green-500/10',
   payment_due: 'text-orange-500 bg-orange-500/10',
   payment_received: 'text-green-500 bg-green-500/10',
@@ -51,10 +51,10 @@ const typeColors: Record<string, string> = {
   subscription_approved: 'text-green-500 bg-green-500/10',
   subscription_rejected: 'text-red-500 bg-red-500/10',
   subscription_expiring: 'text-orange-500 bg-orange-500/10',
-  menu_published: 'text-blue-500 bg-blue-500/10',
+  menu_published: 'bg-secondary text-secondary-foreground',
   room_allocated: 'text-purple-500 bg-purple-500/10',
   room_change_request: 'text-purple-500 bg-purple-500/10',
-  announcement: 'text-indigo-500 bg-indigo-500/10',
+  announcement: 'bg-secondary text-secondary-foreground',
   feedback_received: 'text-yellow-500 bg-yellow-500/10',
   system: 'bg-muted text-muted-foreground',
 };
